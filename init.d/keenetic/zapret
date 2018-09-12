@@ -170,7 +170,7 @@ case "$1" in
 	esac
 
 	echo -n "Stopping $DESC: "
-	start-stop-daemon  -K -t -q -p $PIDFILE -x $DAEMON
+	start-stop-daemon  -K -q -p $PIDFILE -x $DAEMON
 	echo "$NAME."
 	;;
   *)
