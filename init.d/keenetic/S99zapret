@@ -46,17 +46,28 @@ set -e
 
 case "$1" in
   start)
-	echo "Checking iptable_raw.ko kernel module"
-	if lsmod | grep "iptable_raw " &> /dev/null ;  then
-	 echo "iptable_raw.ko is already loaded"
-	else
-	 if insmod /lib/modules/$(uname -r)/iptable_raw.ko &> /dev/null; then
-	  echo "iptable_raw.ko loaded"
-	 else
-	  echo "Cannot find iptable_raw.ko kernel module, aborting"
-	  exit 1
-	 fi
-	fi
+        if lsmod | grep "iptable_raw " &> /dev/null ;  then
+         echo "iptable_raw.ko is already loaded"
+        else
+         if insmod /lib/modules/$(uname -r)/iptable_raw.ko &> /dev/null; then
+          echo "iptable_raw.ko loaded"
+         else
+          echo "Cannot find iptable_raw.ko kernel module, aborting"
+          exit 1
+         fi
+        fi
+        if ($NFQWS 2> /dev/null| grep "wsize") &> /dev/null ; then
+         echo "nfqws is installed"
+        else
+         echo "nfqws is not installed, aborting"
+         exit 1
+        fi
+        if ($TPWS --test 2> /dev/null| grep "maxconn") &> /dev/null ; then
+         echo "tpws is installed"
+        else
+         echo "tpws is not installed, aborting"
+         exit 1
+        fi
 	echo "Restoring ipset"
 	#($IPSET_CR)
 	if !(ipset list -n zapret > /dev/null) ; then
