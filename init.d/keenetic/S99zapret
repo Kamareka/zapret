@@ -56,6 +56,16 @@ case "$1" in
           exit 1
          fi
         fi
+	if lsmod | grep "xt_string " &> /dev/null ;  then
+         echo "xt_string.ko is already loaded"
+        else
+         if insmod /lib/modules/$(uname -r)/xt_string.ko &> /dev/null; then
+          echo "xt_string.ko loaded"
+         else
+          echo "Cannot find xt_string.ko kernel module, aborting"
+          exit 1
+         fi
+        fi
         if ($NFQWS 2> /dev/null| grep "wsize") &> /dev/null ; then
          echo "nfqws is installed"
         else
