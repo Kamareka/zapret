@@ -80,10 +80,10 @@ case "$1" in
 	    fragmentation)
 		iptables -t raw -C PREROUTING -p tcp --sport 80 -m string --hex-string "$BLACKHOLE_REG" --algo bm -j DROP --from 40 --to 200 2>/dev/null ||
 		 iptables -t raw -I PREROUTING -p tcp --sport 80 -m string --hex-string "$BLACKHOLE_REG" --algo bm -j DROP --from 40 --to 200
-		iptables -t raw -C PREROUTING -p tcp --sport 80 --tcp-flags SYN,ACK SYN,ACK -m set --match-set zapret src -j NFQUEUE --queue-num $QNUM --queue-bypass 2>/dev/null ||
-		 iptables -t raw -I PREROUTING -p tcp --sport 80 --tcp-flags SYN,ACK SYN,ACK -m set --match-set zapret src -j NFQUEUE --queue-num $QNUM --queue-bypass
-		iptables -t nat -C PREROUTING -p tcp --dport 443 -m set --match-set zapret dst -j REDIRECT --to-port 8888 2>/dev/null ||
-                 iptables -t nat -I PREROUTING -p tcp --dport 443 -m set --match-set zapret dst -j REDIRECT --to-port 8888
+		iptables -t raw -C PREROUTING -p tcp --sports 80,443 --tcp-flags SYN,ACK SYN,ACK -m set --match-set zapret src -j NFQUEUE --queue-num $QNUM --queue-bypass 2>/dev/null ||
+		 iptables -t raw -I PREROUTING -m multiport -p tcp --sports 80,443 --tcp-flags SYN,ACK SYN,ACK -m set --match-set zapret src -j NFQUEUE --queue-num $QNUM --queue-bypass
+		#iptables -t nat -C PREROUTING -p tcp --dport 443 -m set --match-set zapret dst -j REDIRECT --to-port 8888 2>/dev/null ||
+        #         iptables -t nat -I PREROUTING -p tcp --dport 443 -m set --match-set zapret dst -j REDIRECT --to-port 8888
 		DAEMON=$NFQWS
 		DAEMON_OPTS="--qnum=$QNUM --wsize=5"
 		;;
@@ -110,8 +110,8 @@ case "$1" in
 	case "${ACTION}" in
 	    fragmentation)
 		iptables -t raw -D PREROUTING -p tcp --sport 80 -m string --hex-string "$BLACKHOLE_REG" --algo bm -j DROP --from 40 --to 200
-		iptables -t raw -D PREROUTING -p tcp --sport 80 --tcp-flags SYN,ACK SYN,ACK -m set --match-set zapret src -j NFQUEUE --queue-num $QNUM --queue-bypass
-		iptables -t nat -D PREROUTING -p tcp --dport 443 -m set --match-set zapret dst -j REDIRECT --to-port 8888
+		iptables -t raw -D PREROUTING -m multiport -p tcp --sports 80,443 --tcp-flags SYN,ACK SYN,ACK -m set --match-set zapret src -j NFQUEUE --queue-num $QNUM --queue-bypass
+		#iptables -t nat -D PREROUTING -p tcp --dport 443 -m set --match-set zapret dst -j REDIRECT --to-port 8888
 		DAEMON=$NFQWS
 		;;
 	    modification)
