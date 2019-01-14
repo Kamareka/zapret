@@ -15,7 +15,7 @@
 ACTION=fragmentation
 
 # CHOSE NETWORK INTERFACE BEHIND NAT
-SLAVE_ETH=br0
+SLAVE_ETH=eth2.2
 
 
 IPSET_CR=/opt/zapret/ipset/create_ipset.sh
