@@ -7,5 +7,5 @@ EXEDIR=$(dirname $SCRIPT)
 . "$EXEDIR/def.sh"
 
 getuser
-
+getuser6
 "$EXEDIR/create_ipset.sh"
