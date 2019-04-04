@@ -75,6 +75,9 @@ case "$1" in
 	if !(ipset list -n zapret > /dev/null) ; then
 	 ipset restore -f /opt/zapret/ipset/zapret.ipset
 	fi
+	if !(ipset list -n zapret6 > /dev/null) ; then
+	 ipset restore -f /opt/zapret/ipset/zapret6.ipset
+	fi
 	echo "Adding iptables rule"
 	case "${ACTION}" in
 	    fragmentation)
