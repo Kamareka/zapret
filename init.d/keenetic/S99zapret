@@ -98,8 +98,8 @@ case "$1" in
 		 iptables -t nat -I PREROUTING -p tcp --dport 80 -i $SLAVE_ETH -m set --match-set zapret dst -j DNAT --to 127.0.0.1:$TPPORT
 		iptables -t nat -C OUTPUT -p tcp --dport 80 -m owner ! --uid-owner $TPWS_USER -m set --match-set zapret dst -j DNAT --to 127.0.0.1:$TPPORT 2>/dev/null ||
 		 iptables -t nat -I OUTPUT -p tcp --dport 80 -m owner ! --uid-owner $TPWS_USER -m set --match-set zapret dst -j DNAT --to 127.0.0.1:$TPPORT
-		ip6tables -t mangle -C PREROUTING -p tcp --dport 80 -i br0 -m set --match-set zapret6 dst -j TPROXY --tproxy-mark 0x9/0x9 --on-port $TPPORT --on-ip ::1 2>/dev/null ||
-		 ip6tables -t mangle -I PREROUTING -p tcp --dport 80 -i br0 -m set --match-set zapret6 dst -j TPROXY --tproxy-mark 0x9/0x9 --on-port $TPPORT --on-ip ::1
+		ip6tables -t mangle -C PREROUTING -p tcp --dport 80 -i $SLAVE_ETH -m set --match-set zapret6 dst -j TPROXY --tproxy-mark 0x9/0x9 --on-port $TPPORT --on-ip ::1 2>/dev/null ||
+		 ip6tables -t mangle -I PREROUTING -p tcp --dport 80 -i $SLAVE_ETH -m set --match-set zapret6 dst -j TPROXY --tproxy-mark 0x9/0x9 --on-port $TPPORT --on-ip ::1
 		ip6tables -t mangle -N DIVERT
 		ip6tables -t mangle -A DIVERT -j MARK --set-mark 9
 		ip6tables -t mangle -A DIVERT -j ACCEPT
@@ -133,7 +133,7 @@ case "$1" in
 		ip6tables -t mangle -D PREROUTING -p tcp -m socket -j DIVERT
 		ip6tables -t mangle -F DIVERT
 		ip6tables -t mangle -X DIVERT
-		ip6tables -t mangle -D PREROUTING -p tcp --dport 80 -i br0 -m set --match-set zapret6 dst -j TPROXY --tproxy-mark 0x9/0x9 --on-port $TPPORT --on-ip ::1
+		ip6tables -t mangle -D PREROUTING -p tcp --dport 80 -i $SLAVE_ETH -m set --match-set zapret6 dst -j TPROXY --tproxy-mark 0x9/0x9 --on-port $TPPORT --on-ip ::1
 		ip -6 rule del from all fwmark 0x9
 		ip -6 route flush table 99
 		ip -6 route del local default dev lo table 99
