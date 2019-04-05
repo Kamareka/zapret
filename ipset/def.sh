@@ -28,7 +28,7 @@ getuser()
 getuser6()
 {
  [ -f $ZUSERLIST ] && {
-  dig AAAA +short +time=8 +tries=2 -f $ZUSERLIST | sort -u >$ZIPLIST_USER6
+  dig AAAA +short +time=8 +tries=2 -f $ZUSERLIST | grep -E '^[^;].*[^.]$' | sort -u >$ZIPLIST_USER6
  }
 }
 
