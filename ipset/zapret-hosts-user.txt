@@ -3,3 +3,5 @@ s.kinozal.tv
 static.rutracker.org
 static2.rutracker.org
 bt.rutracker.org
+rutracker.org
+kinozal.tv
