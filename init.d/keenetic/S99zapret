@@ -93,14 +93,16 @@ case "$1" in
 		;;
 	    modification)
 		sysctl -w net.ipv4.conf.$SLAVE_ETH.route_localnet=1
-		ip -6 route add local default dev lo table 99
-		ip -6 rule add from all fwmark 0x9 lookup 99
-    ip6tables -t mangle -C PREROUTING -p tcp --dport 80 -i $SLAVE_ETH -m set --match-set zapret6 dst -j TPROXY --tproxy-mark 0x9/0x9 --on-port $TPPORT --on-ip ::1 2>/dev/null ||
-     ip6tables -t mangle -I PREROUTING -p tcp --dport 80 -i $SLAVE_ETH -m set --match-set zapret6 dst -j TPROXY --tproxy-mark 0x9/0x9 --on-port $TPPORT --on-ip ::1
-    ip6tables -t mangle -N DIVERT
-    ip6tables -t mangle -C DIVERT -j MARK --set-mark 9 2>/dev/null || ip6tables -t mangle -A DIVERT -j MARK --set-mark 9
-    ip6tables -t mangle -C DIVERT -j ACCEPT 2>/dev/null || ip6tables -t mangle -I DIVERT -j ACCEPT
-    ip6tables -t mangle -C PREROUTING -p tcp -m socket  -j DIVERT 2>/dev/null || ip6tables -t mangle -I PREROUTING -p tcp -m socket  -j DIVERT
+    if [ -e /proc/net/if_inet6 ] ; then
+  	  ! ip -6 route add local default dev lo table 99
+		  ! ip -6 rule add from all fwmark 0x9 lookup 99
+      ip6tables -t mangle -C PREROUTING -p tcp --dport 80 -i $SLAVE_ETH -m set --match-set zapret6 dst -j TPROXY --tproxy-mark 0x9/0x9 --on-port $TPPORT --on-ip ::1 2>/dev/null ||
+       ip6tables -t mangle -I PREROUTING -p tcp --dport 80 -i $SLAVE_ETH -m set --match-set zapret6 dst -j TPROXY --tproxy-mark 0x9/0x9 --on-port $TPPORT --on-ip ::1
+      ip6tables -t mangle -N DIVERT
+      ip6tables -t mangle -C DIVERT -j MARK --set-mark 9 2>/dev/null || ip6tables -t mangle -A DIVERT -j MARK --set-mark 9
+      ip6tables -t mangle -C DIVERT -j ACCEPT 2>/dev/null || ip6tables -t mangle -I DIVERT -j ACCEPT
+      ip6tables -t mangle -C PREROUTING -p tcp -m socket  -j DIVERT 2>/dev/null || ip6tables -t mangle -I PREROUTING -p tcp -m socket  -j DIVERT
+    fi
     iptables -t nat -C PREROUTING -p tcp --dport 80 -i $SLAVE_ETH -m set --match-set zapret dst -j DNAT --to 127.0.0.1:$TPPORT 2>/dev/null ||
      iptables -t nat -I PREROUTING -p tcp --dport 80 -i $SLAVE_ETH -m set --match-set zapret dst -j DNAT --to 127.0.0.1:$TPPORT
     iptables -t nat -C OUTPUT -p tcp --dport 80 -m owner ! --uid-owner $TPWS_USER -m set --match-set zapret dst -j DNAT --to 127.0.0.1:$TPPORT 2>/dev/null ||
@@ -110,16 +112,18 @@ case "$1" in
 		;;
     combined)
   sysctl -w net.ipv4.conf.$SLAVE_ETH.route_localnet=1
-  ! ip -6 route add local default dev lo table 99
-  ! ip -6 rule add from all fwmark 0x9 lookup 99
+  if [ -e /proc/net/if_inet6 ] ; then
+    ! ip -6 route add local default dev lo table 99
+    ! ip -6 rule add from all fwmark 0x9 lookup 99
+    ip6tables -t mangle -C PREROUTING -p tcp --dport 80 -i $SLAVE_ETH -m set --match-set zapret6 dst -j TPROXY --tproxy-mark 0x9/0x9 --on-port $TPPORT --on-ip ::1 2>/dev/null ||
+     ip6tables -t mangle -I PREROUTING -p tcp --dport 80 -i $SLAVE_ETH -m set --match-set zapret6 dst -j TPROXY --tproxy-mark 0x9/0x9 --on-port $TPPORT --on-ip ::1
+    ip6tables -t mangle -N DIVERT
+    ip6tables -t mangle -C DIVERT -j MARK --set-mark 9 2>/dev/null || ip6tables -t mangle -A DIVERT -j MARK --set-mark 9
+    ip6tables -t mangle -C DIVERT -j ACCEPT 2>/dev/null || ip6tables -t mangle -I DIVERT -j ACCEPT
+    ip6tables -t mangle -C PREROUTING -p tcp -m socket  -j DIVERT 2>/dev/null || ip6tables -t mangle -I PREROUTING -p tcp -m socket  -j DIVERT
+  fi
   iptables -t raw -C PREROUTING -p tcp --sports 443 --tcp-flags SYN,ACK SYN,ACK -m set --match-set zapret src -j NFQUEUE --queue-num $QNUM --queue-bypass 2>/dev/null ||
    iptables -t raw -I PREROUTING -m multiport -p tcp --sports 443 --tcp-flags SYN,ACK SYN,ACK -m set --match-set zapret src -j NFQUEUE --queue-num $QNUM --queue-bypass
-  ip6tables -t mangle -C PREROUTING -p tcp --dport 80 -i $SLAVE_ETH -m set --match-set zapret6 dst -j TPROXY --tproxy-mark 0x9/0x9 --on-port $TPPORT --on-ip ::1 2>/dev/null ||
-   ip6tables -t mangle -I PREROUTING -p tcp --dport 80 -i $SLAVE_ETH -m set --match-set zapret6 dst -j TPROXY --tproxy-mark 0x9/0x9 --on-port $TPPORT --on-ip ::1
-  ip6tables -t mangle -N DIVERT
-  ip6tables -t mangle -C DIVERT -j MARK --set-mark 9 2>/dev/null || ip6tables -t mangle -A DIVERT -j MARK --set-mark 9
-  ip6tables -t mangle -C DIVERT -j ACCEPT 2>/dev/null || ip6tables -t mangle -I DIVERT -j ACCEPT
-  ip6tables -t mangle -C PREROUTING -p tcp -m socket  -j DIVERT 2>/dev/null || ip6tables -t mangle -I PREROUTING -p tcp -m socket  -j DIVERT
   iptables -t nat -C PREROUTING -p tcp --dport 80 -i $SLAVE_ETH -m set --match-set zapret dst -j DNAT --to 127.0.0.1:$TPPORT 2>/dev/null ||
    iptables -t nat -I PREROUTING -p tcp --dport 80 -i $SLAVE_ETH -m set --match-set zapret dst -j DNAT --to 127.0.0.1:$TPPORT
   iptables -t nat -C OUTPUT -p tcp --dport 80 -m owner ! --uid-owner $TPWS_USER -m set --match-set zapret dst -j DNAT --to 127.0.0.1:$TPPORT 2>/dev/null ||
@@ -151,12 +155,14 @@ case "$1" in
       sysctl -w net.ipv4.conf.$SLAVE_ETH.route_localnet=0
       ! iptables -t nat -D PREROUTING -p tcp --dport 80 -i $SLAVE_ETH -m set --match-set zapret dst -j DNAT --to 127.0.0.1:$TPPORT 2>/dev/null
       ! iptables -t nat -D OUTPUT -p tcp --dport 80 -m owner ! --uid-owner $TPWS_USER -m set --match-set zapret dst -j DNAT --to 127.0.0.1:$TPPORT 2>/dev/null
-      ! ip6tables -t mangle -D PREROUTING -p tcp -m socket -j DIVERT 2>/dev/null
-      ! ip6tables -t mangle -F DIVERT 2>/dev/null
-      ! ip6tables -t mangle -X DIVERT 2>/dev/null
-      ! ip6tables -t mangle -D PREROUTING -p tcp --dport 80 -i $SLAVE_ETH -m set --match-set zapret6 dst -j TPROXY --tproxy-mark 0x9/0x9 --on-port $TPPORT --on-ip ::1 2>/dev/null
-      ! ip -6 rule del from all fwmark 0x9 2>/dev/null
-      ! ip -6 route del local default dev lo table 99 2>/dev/null
+      if [ -e /proc/net/if_inet6 ] ; then
+        ! ip6tables -t mangle -D PREROUTING -p tcp -m socket -j DIVERT 2>/dev/null
+        ! ip6tables -t mangle -F DIVERT 2>/dev/null
+        ! ip6tables -t mangle -X DIVERT 2>/dev/null
+        ! ip6tables -t mangle -D PREROUTING -p tcp --dport 80 -i $SLAVE_ETH -m set --match-set zapret6 dst -j TPROXY --tproxy-mark 0x9/0x9 --on-port $TPPORT --on-ip ::1 2>/dev/null
+        ! ip -6 rule del from all fwmark 0x9 2>/dev/null
+        ! ip -6 route del local default dev lo table 99 2>/dev/null
+      fi
 		DAEMON=$TPWS
 		;;
     combined)
@@ -164,12 +170,14 @@ case "$1" in
       ! iptables -t raw -D PREROUTING -m multiport -p tcp --sports 443 --tcp-flags SYN,ACK SYN,ACK -m set --match-set zapret src -j NFQUEUE --queue-num $QNUM --queue-bypass
       ! iptables -t nat -D PREROUTING -p tcp --dport 80 -i $SLAVE_ETH -m set --match-set zapret dst -j DNAT --to 127.0.0.1:$TPPORT 2>/dev/null
       ! iptables -t nat -D OUTPUT -p tcp --dport 80 -m owner ! --uid-owner $TPWS_USER -m set --match-set zapret dst -j DNAT --to 127.0.0.1:$TPPORT 2>/dev/null
-      ! ip6tables -t mangle -D PREROUTING -p tcp -m socket -j DIVERT 2>/dev/null
-      ! ip6tables -t mangle -F DIVERT 2>/dev/null
-      ! ip6tables -t mangle -X DIVERT 2>/dev/null
-      ! ip6tables -t mangle -D PREROUTING -p tcp --dport 80 -i $SLAVE_ETH -m set --match-set zapret6 dst -j TPROXY --tproxy-mark 0x9/0x9 --on-port $TPPORT --on-ip ::1 2>/dev/null
-      ! ip -6 rule del from all fwmark 0x9 2>/dev/null
-      ! ip -6 route del local default dev lo table 99 2>/dev/null
+      if [ -e /proc/net/if_inet6 ] ; then
+        ! ip6tables -t mangle -D PREROUTING -p tcp -m socket -j DIVERT 2>/dev/null
+        ! ip6tables -t mangle -F DIVERT 2>/dev/null
+        ! ip6tables -t mangle -X DIVERT 2>/dev/null
+        ! ip6tables -t mangle -D PREROUTING -p tcp --dport 80 -i $SLAVE_ETH -m set --match-set zapret6 dst -j TPROXY --tproxy-mark 0x9/0x9 --on-port $TPPORT --on-ip ::1 2>/dev/null
+        ! ip -6 rule del from all fwmark 0x9 2>/dev/null
+        ! ip -6 route del local default dev lo table 99 2>/dev/null
+      fi
       #ip -6 route flush table 99
       killall nfqws
     DAEMON=$TPWS
