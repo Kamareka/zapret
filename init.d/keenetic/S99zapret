@@ -141,7 +141,9 @@ case "$1" in
   stop)
 	echo "Saving ipset"
 	ipset save zapret -f /opt/zapret/ipset/zapret.ipset
-	ipset save zapret6 -f /opt/zapret/ipset/zapret6.ipset
+  if [ -e /proc/net/if_inet6 ] ; then
+	   ipset save zapret6 -f /opt/zapret/ipset/zapret6.ipset
+  fi
 	echo "Deleting iptables rule"
 
 	case "${ACTION}" in
